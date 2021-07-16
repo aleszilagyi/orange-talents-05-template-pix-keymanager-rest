@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: br.com.orangetalents
+testFramework: junit
+sourceLanguage: kotlin
+buildTool: gradle
+features: [annotation-api, app-name, gradle, hamcrest, hibernate-validator, http-client, jackson-xml, junit, kotlin, kotlin-application, logback, management, micrometer, micrometer-prometheus, mockito, netty-server, openapi, readme, shade, tracing-jaeger, yaml]

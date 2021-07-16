@@ -1,0 +1,112 @@
+plugins {
+    id("org.jetbrains.kotlin.jvm") version "1.4.32"
+    id("org.jetbrains.kotlin.kapt") version "1.4.32"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("io.micronaut.application") version "1.5.3"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.4.32"
+    id("com.google.protobuf") version "0.8.15"
+}
+
+version = "0.1"
+group = "br.com.orangetalents"
+
+repositories {
+    mavenCentral()
+}
+
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("br.com.orangetalents.*")
+    }
+}
+
+dependencies {
+    kapt("io.micronaut.openapi:micronaut-openapi")
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("io.micronaut:micronaut-management")
+    implementation("io.micronaut:micronaut-runtime")
+    implementation("io.micronaut:micronaut-tracing")
+    implementation("io.micronaut.beanvalidation:micronaut-hibernate-validator")
+    implementation("org.hibernate.validator:hibernate-validator:6.2.0.Final")
+    implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
+    implementation("io.micronaut.micrometer:micronaut-micrometer-core")
+    implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
+    implementation("io.micronaut.xml:micronaut-jackson-xml")
+    implementation("io.swagger.core.v3:swagger-annotations")
+    implementation("javax.annotation:javax.annotation-api")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+    runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("io.jaegertracing:jaeger-thrift")
+    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut.grpc:micronaut-grpc-client-runtime")
+
+    annotationProcessor("io.micronaut:micronaut-inject-java")
+
+    runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    testAnnotationProcessor("io.micronaut:micronaut-inject-java")
+    testImplementation("org.hamcrest:hamcrest")
+    testImplementation("org.mockito:mockito-core:3.11.2")
+    testImplementation("org.mockito:mockito-inline:3.11.2")
+    testImplementation("org.mockito:mockito-junit-jupiter:3.11.2")
+    testImplementation("org.testcontainers:testcontainers")
+    testImplementation("io.micronaut:micronaut-http-client")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("io.micronaut.test:micronaut-test-junit5:2.3.7")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1")
+}
+
+application {
+    mainClass.set("br.com.orangetalents.ApplicationKt")
+}
+java {
+    sourceCompatibility = JavaVersion.toVersion("11")
+}
+
+tasks {
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs("build/generated/source/proto/main/grpc")
+            srcDirs("build/generated/source/proto/main/java")
+        }
+    }
+}
+
+ext {
+    protocVersion = "3.17.2"
+    grpcVersion = "1.38.0"
+}
+
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+kapt {
+    arguments {
+        arg("micronaut.openapi.views.spec", "swagger-ui.enabled=true,swagger-ui.theme=flattop")
+    }
+}
