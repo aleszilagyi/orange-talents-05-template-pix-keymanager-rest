@@ -1,4 +1,4 @@
-package br.com.orangetalents.pix.controller
+package br.com.orangetalents.pix.controller.registra
 
 import br.com.orangetalents.KeyManagerRegistraPixServiceGrpc
 import br.com.orangetalents.pix.config.validator.ValidUUID
@@ -11,6 +11,7 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
 import javax.validation.Valid
+import javax.validation.constraints.NotBlank
 
 @Validated
 @Controller("/api/v1/clientes/{clienteId}")
@@ -20,7 +21,7 @@ class RegistraChaveController(private val registraChavePixClient: KeyManagerRegi
 
     @Post("/pix")
     fun registra(
-        @PathVariable @ValidUUID clienteId: String,
+        @PathVariable @NotBlank @ValidUUID clienteId: String,
         @Valid @Body request: RegistraChavePixRequestDto
     ): HttpResponse<Any> {
         LOGGER.info("[$clienteId] criando uma nova chave pix com $request")

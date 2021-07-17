@@ -6,6 +6,7 @@ import br.com.orangetalents.dto.TipoDeChaveDto
 import br.com.orangetalents.dto.TipoDeContaDto
 import br.com.orangetalents.pix.config.grpc.KeyManagerGRpcFactory
 import br.com.orangetalents.pix.dto.RegistraChavePixRequestDto
+import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.context.annotation.Replaces
 import io.micronaut.http.HttpRequest
@@ -15,7 +16,11 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
+import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.*
 import java.util.*
 import javax.inject.Inject
@@ -36,10 +41,14 @@ internal class RegistraChaveControllerTest(
     @field:Client("/")
     lateinit var client: HttpClient
 
+    @BeforeEach
+    internal fun setUp(){
+        Mockito.reset(gRpcRegistra)
+    }
+
     @Test
     internal fun `deve registrar uma nova chave`() {
-
-        `when`(gRpcRegistra.registra(any())).thenReturn(respostaGrpc()) //sempre retorna isso aqui, independente do que for enviado, pouco seguro, mas serve para lembrar do uso
+        given(gRpcRegistra.registra(any())).willReturn(respostaGrpc()) //sempre retorna isso aqui, independente do que for enviado, pouco seguro, mas serve para lembrar do uso
 
         val request = HttpRequest.POST("/api/v1/clientes/$CLIENT_ID/pix", novaChavePix())
         val response = client.toBlocking().exchange(request, novaChavePix().javaClass)
@@ -49,14 +58,22 @@ internal class RegistraChaveControllerTest(
         assertTrue(response.header("Location")!!.contains(PIX_ID))
     }
 
-    fun respostaGrpc(): RegistraChavePixReply {
+    @Test
+    internal fun `deve retornar erro 400 quando o clienteId nao for um UUID valido`() {
+        val request = HttpRequest.POST("/api/v1/clientes/banana123/pix", novaChavePix())
+        val response = client.toBlocking().exchange(request, novaChavePix().javaClass)
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.status)
+    }
+
+    internal fun respostaGrpc(): RegistraChavePixReply {
         return RegistraChavePixReply.newBuilder()
             .setClienteId(CLIENT_ID)
             .setPixId(PIX_ID)
             .build()
     }
 
-    fun novaChavePix(): RegistraChavePixRequestDto {
+    internal fun novaChavePix(): RegistraChavePixRequestDto {
         return RegistraChavePixRequestDto(
             tipoDeConta = TipoDeContaDto.CONTA_CORRENTE,
             chavePix = "teste@gmail.com",
