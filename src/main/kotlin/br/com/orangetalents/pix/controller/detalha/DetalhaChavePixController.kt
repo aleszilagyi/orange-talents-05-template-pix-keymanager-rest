@@ -32,8 +32,9 @@ class DetalhaChavePixController(
                     .build()
             ).build()
         )
+        val detalhesChavePix = DetalheChavePixResponse.of(chaveResponse)
 
-        return HttpResponse.ok(DetalheChavePixResponse.of(chaveResponse))
+        return HttpResponse.ok(detalhesChavePix)
     }
 
 }

@@ -10,11 +10,11 @@ import java.time.ZoneOffset
 
 @Introspected
 data class DetalheChavePixResponse(
-    private val pixId: String,
-    private val tipoDeChave: TipoDeChave,
-    private val chave: String,
-    private val criadoEm: LocalDateTime,
-    private val conta: ContaDetalheChavePixResponse
+    val pixId: String,
+    val tipoDeChave: TipoDeChave,
+    val chave: String,
+    val criadoEm: LocalDateTime,
+    val conta: ContaDetalheChavePixResponse
 ) {
     companion object {
         fun of(detalhes: DetalhesChavePixReply): DetalheChavePixResponse {
@@ -35,12 +35,12 @@ data class DetalheChavePixResponse(
 }
 
 data class ContaDetalheChavePixResponse(
-    private val tipoDeConta: String,
-    private val instituicao: String,
-    private val nomeDoTitular: String,
-    private val cpfDoTitular: String,
-    private val agencia: String,
-    private val numero: String
+    val tipoDeConta: String,
+    val instituicao: String,
+    val nomeDoTitular: String,
+    val cpfDoTitular: String,
+    val agencia: String,
+    val numero: String
 ) {
     companion object {
         fun of(detalhes: DetalhesChavePixReply): ContaDetalheChavePixResponse {
