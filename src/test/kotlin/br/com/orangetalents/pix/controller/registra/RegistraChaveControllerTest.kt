@@ -3,6 +3,7 @@ package br.com.orangetalents.pix.controller.registra
 import br.com.orangetalents.*
 import br.com.orangetalents.dto.TipoDeChaveDto
 import br.com.orangetalents.dto.TipoDeContaDto
+import br.com.orangetalents.pix.config.exception.StatusWithDetails
 import br.com.orangetalents.pix.config.grpc.KeyManagerGRpcFactory
 import br.com.orangetalents.pix.dto.RegistraChavePixRequestDto
 import io.micronaut.context.annotation.Factory
@@ -50,7 +51,7 @@ internal class RegistraChaveControllerTest {
         `when`(gRpcRegistra.registra(requestCreatedGrpc())).thenReturn(replyCreatedGrpc())
 
         val request = HttpRequest.POST("/api/v1/clientes/$CLIENT_ID/pix", novaChavePix())
-        val response = client.toBlocking().exchange(request, novaChavePix().javaClass)
+        val response = client.toBlocking().exchange(request, Any::class.java)
 
         with(response) {
             assertEquals(HttpStatus.CREATED, status)
@@ -60,27 +61,44 @@ internal class RegistraChaveControllerTest {
     }
 
     @Test
+    internal fun `deve retornar erro BAD_REQUEST quando enviar dados invalidos`() {
+        `when`(gRpcRegistra.registra(requestErrorGrpc("")))
+            .thenThrow(
+                io.grpc.Status.INVALID_ARGUMENT.withDescription("Dados inválidos").asRuntimeException()
+            )
+
+        val request =
+            HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePixErrorRequest(""))
+        val httpThrow = assertThrows<HttpClientResponseException> {
+            client.toBlocking().exchange(request, Any::class.java)
+        }
+
+        with(httpThrow.response) {
+            assertEquals(HttpStatus.BAD_REQUEST, status)
+        }
+    }
+
+    @Test
     internal fun `deve retornar erro HTTP_UNPROCESSABLE_ENTITY quando o clienteId nao estiver cadastrado no ITAU`() {
-        `when`(gRpcRegistra.registra(requestErrorGrpc()))
+        `when`(gRpcRegistra.registra(requestErrorGrpc(EMAIL_PIX)))
             .thenThrow(
                 io.grpc.Status.ALREADY_EXISTS.withDescription("Cliente não encontrado no Itaú").asRuntimeException()
             )
 
         val request = HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePix())
         val httpThrow = assertThrows<HttpClientResponseException> {
-            client.toBlocking().exchange(request, novaChavePix().javaClass)
+            client.toBlocking().exchange(request, Any::class.java)
         }
 
         with(httpThrow) {
             assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, status)
-            assertEquals("Cliente não encontrado no Itaú", localizedMessage)
         }
     }
 
-    internal fun requestErrorGrpc(): RegistraChavePixRequest {
+    internal fun requestErrorGrpc(chavePix: String): RegistraChavePixRequest {
         return RegistraChavePixRequest.newBuilder()
             .setClienteId("fb7da232-62cd-49a3-92cf-a88a7022f9c0")
-            .setChavePix(EMAIL_PIX)
+            .setChavePix(chavePix)
             .setTipoDeChave(TipoDeChave.EMAIL)
             .setTipoDeConta(TipoDeConta.CONTA_CORRENTE)
             .build()
@@ -106,6 +124,14 @@ internal class RegistraChaveControllerTest {
         return RegistraChavePixRequestDto(
             tipoDeConta = TipoDeContaDto.CONTA_CORRENTE,
             chavePix = EMAIL_PIX,
+            tipoDeChave = TipoDeChaveDto.EMAIL
+        )
+    }
+
+    internal fun novaChavePixErrorRequest(chavePix: String): RegistraChavePixRequestDto {
+        return RegistraChavePixRequestDto(
+            tipoDeConta = TipoDeContaDto.CONTA_CORRENTE,
+            chavePix = chavePix,
             tipoDeChave = TipoDeChaveDto.EMAIL
         )
     }

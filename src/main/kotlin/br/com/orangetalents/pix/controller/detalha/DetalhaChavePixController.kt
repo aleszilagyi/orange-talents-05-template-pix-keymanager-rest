@@ -11,7 +11,7 @@ import io.micronaut.http.annotation.PathVariable
 import io.micronaut.validation.Validated
 import org.slf4j.LoggerFactory
 
-@Validated
+//@Validated
 @Controller("/api/v1/clientes/{clienteId}")
 class DetalhaChavePixController(
     private val detalhaChavesPixGRpc: KeyManagerDetalhaPixServiceGrpc.KeyManagerDetalhaPixServiceBlockingStub
