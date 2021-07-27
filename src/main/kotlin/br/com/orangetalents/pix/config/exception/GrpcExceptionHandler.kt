@@ -1,5 +1,6 @@
 package br.com.orangetalents.pix.config.exception
 
+import com.google.rpc.BadRequest
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.micronaut.http.HttpRequest
@@ -22,31 +23,43 @@ class GrpcExceptionHandler : ExceptionHandler<StatusRuntimeException, HttpRespon
             Status.NOT_FOUND.code -> StatusWithDetails.resolveHttpResponse(
                 HttpStatus.NOT_FOUND,
                 statusDescription,
-                gStatus
+                obterListaDeErros(gStatus)
             )
             Status.INVALID_ARGUMENT.code -> StatusWithDetails.resolveHttpResponse(
                 HttpStatus.BAD_REQUEST,
                 statusDescription,
-                gStatus
+                obterListaDeErros(gStatus)
             )
             Status.ALREADY_EXISTS.code -> StatusWithDetails.resolveHttpResponse(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 statusDescription,
-                gStatus
+                obterListaDeErros(gStatus)
             )
             Status.FAILED_PRECONDITION.code -> StatusWithDetails.resolveHttpResponse(
                 HttpStatus.UNPROCESSABLE_ENTITY,
                 statusDescription,
-                gStatus
+                obterListaDeErros(gStatus)
             )
             else -> {
                 LOGGER.error("Erro inesperado '${exception.javaClass.name}' ao processar requisição", exception)
                 StatusWithDetails.resolveHttpResponse(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Nao foi possivel completar a requisição devido ao erro: ${statusDescription} (${statusCode})",
-                    gStatus
+                    listOf()
                 )
             }
         }
+    }
+
+    private fun obterListaDeErros(gStatus: com.google.rpc.Status): List<FieldError> {
+        return gStatus.detailsList.map { error -> error.unpack(BadRequest::class.java) }
+            .flatMap { badRequest ->
+                badRequest.fieldViolationsList.map { violation ->
+                    FieldError(
+                        violation.field,
+                        violation.description
+                    )
+                }
+            }
     }
 }

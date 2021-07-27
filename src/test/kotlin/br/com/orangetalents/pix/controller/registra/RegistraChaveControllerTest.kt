@@ -8,6 +8,7 @@ import br.com.orangetalents.pix.config.grpc.KeyManagerGRpcFactory
 import br.com.orangetalents.pix.dto.RegistraChavePixRequestDto
 import io.micronaut.context.annotation.Factory
 import io.micronaut.context.annotation.Replaces
+import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.client.HttpClient
@@ -32,13 +33,15 @@ internal class RegistraChaveControllerTest {
         val CLIENT_ID = UUID.randomUUID().toString()
         val PIX_ID = UUID.randomUUID().toString()
         val EMAIL_PIX = "teste@gmail.com"
+        val ERROR_CLASS = Argument.of(StatusWithDetails::class.java)
+
     }
 
     @Inject
     lateinit var gRpcRegistra: KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub
 
     @Inject
-    @field:Client("/")
+    @field:Client( "/")
     lateinit var client: HttpClient
 
     @BeforeEach
@@ -70,7 +73,7 @@ internal class RegistraChaveControllerTest {
         val request =
             HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePixErrorRequest(""))
         val httpThrow = assertThrows<HttpClientResponseException> {
-            client.toBlocking().exchange(request, Any::class.java)
+            client.toBlocking().exchange(request, Argument.of(Any::class.java), ERROR_CLASS)
         }
 
         with(httpThrow.response) {
@@ -87,7 +90,7 @@ internal class RegistraChaveControllerTest {
 
         val request = HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePix())
         val httpThrow = assertThrows<HttpClientResponseException> {
-            client.toBlocking().exchange(request, Any::class.java)
+            client.toBlocking().exchange(request, Argument.of(Any::class.java), ERROR_CLASS)
         }
 
         with(httpThrow) {

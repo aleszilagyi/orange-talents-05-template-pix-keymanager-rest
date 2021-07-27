@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
 
 @Introspected
-//@ValidTipoChave
+@ValidTipoChave
 data class RegistraChavePixRequestDto(
     @field:NotNull val tipoDeChave: TipoDeChaveDto?,
     @field:Size(max = 77) val chavePix: String?,
