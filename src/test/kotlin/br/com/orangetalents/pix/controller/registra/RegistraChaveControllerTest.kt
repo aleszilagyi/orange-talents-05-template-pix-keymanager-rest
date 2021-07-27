@@ -41,7 +41,7 @@ internal class RegistraChaveControllerTest {
     lateinit var gRpcRegistra: KeyManagerRegistraPixServiceGrpc.KeyManagerRegistraPixServiceBlockingStub
 
     @Inject
-    @field:Client( "/")
+    @field:Client("/")
     lateinit var client: HttpClient
 
     @BeforeEach
@@ -78,6 +78,7 @@ internal class RegistraChaveControllerTest {
 
         with(httpThrow.response) {
             assertEquals(HttpStatus.BAD_REQUEST, status)
+            assertEquals("Dados inválidos", getBody(StatusWithDetails::class.java).get().statusDescription)
         }
     }
 
@@ -93,7 +94,7 @@ internal class RegistraChaveControllerTest {
             client.toBlocking().exchange(request, Argument.of(Any::class.java), ERROR_CLASS)
         }
 
-        with(httpThrow) {
+        with(httpThrow.response) {
             assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, status)
         }
     }

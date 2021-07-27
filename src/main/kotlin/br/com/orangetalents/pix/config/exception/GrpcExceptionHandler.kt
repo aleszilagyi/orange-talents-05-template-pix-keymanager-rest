@@ -52,14 +52,14 @@ class GrpcExceptionHandler : ExceptionHandler<StatusRuntimeException, HttpRespon
     }
 
     private fun obterListaDeErros(gStatus: com.google.rpc.Status): List<FieldError> {
-        return gStatus.detailsList.map { error -> error.unpack(BadRequest::class.java) }
-            .flatMap { badRequest ->
+        return gStatus.detailsList?.map { error -> error.unpack(BadRequest::class.java) }
+            ?.flatMap { badRequest ->
                 badRequest.fieldViolationsList.map { violation ->
                     FieldError(
                         violation.field,
                         violation.description
                     )
                 }
-            }
+            } ?: listOf()
     }
 }
