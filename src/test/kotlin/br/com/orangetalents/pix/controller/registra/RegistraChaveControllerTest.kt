@@ -65,11 +65,6 @@ internal class RegistraChaveControllerTest {
 
     @Test
     internal fun `deve retornar erro BAD_REQUEST quando enviar dados invalidos`() {
-        `when`(gRpcRegistra.registra(requestErrorGrpc("")))
-            .thenThrow(
-                io.grpc.Status.INVALID_ARGUMENT.withDescription("Dados inválidos").asRuntimeException()
-            )
-
         val request =
             HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePixErrorRequest(""))
         val httpThrow = assertThrows<HttpClientResponseException> {
@@ -79,6 +74,7 @@ internal class RegistraChaveControllerTest {
         with(httpThrow.response) {
             assertEquals(HttpStatus.BAD_REQUEST, status)
             assertEquals("Dados inválidos", getBody(StatusWithDetails::class.java).get().statusDescription)
+            assertEquals(1, getBody(StatusWithDetails::class.java).get().fieldErrors.size)
         }
     }
 
@@ -91,11 +87,16 @@ internal class RegistraChaveControllerTest {
 
         val request = HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePix())
         val httpThrow = assertThrows<HttpClientResponseException> {
-            client.toBlocking().exchange(request, Argument.of(Any::class.java), ERROR_CLASS)
+            client.toBlocking()
+                .exchange(request, Argument.of(Any::class.java), Argument.of(StatusWithDescriptionTest::class.java))
         }
 
         with(httpThrow.response) {
             assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, status)
+            assertEquals(
+                "Cliente não encontrado no Itaú",
+                getBody(StatusWithDescriptionTest::class.java).get().statusDescription
+            )
         }
     }
 
@@ -139,6 +140,8 @@ internal class RegistraChaveControllerTest {
             tipoDeChave = TipoDeChaveDto.EMAIL
         )
     }
+
+    internal data class StatusWithDescriptionTest(val statusDescription: String)
 
     @Factory
     @Replaces(factory = KeyManagerGRpcFactory::class) // Precisa substituir a factory de client gRPC que tá no projeto para utilizar o contexto de testes
