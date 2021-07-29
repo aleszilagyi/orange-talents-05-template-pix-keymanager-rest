@@ -6,9 +6,8 @@ import io.micronaut.http.hateoas.JsonError
 
 data class StatusWithDetails(
     val statusDescription: String,
-) {
-    constructor(statusDescription: String, fieldErrors: List<FieldError>) : this(statusDescription = statusDescription)
-
+    val fieldErrors: List<FieldError>
+    ) {
     companion object {
         fun resolveHttpResponse(
             httpStatus: HttpStatus,
