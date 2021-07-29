@@ -19,7 +19,7 @@ class GrpcExceptionHandler : ExceptionHandler<StatusRuntimeException, HttpRespon
         val statusCode = exception.status.code
         val gStatus = io.grpc.protobuf.StatusProto.fromThrowable(exception) as com.google.rpc.Status
         val statusDescription = exception.status.description ?: "Desculpe, erro interno"
-        return when (statusCode) {
+        val httpResponse = when (statusCode) {
             Status.NOT_FOUND.code -> StatusWithDetails.resolveHttpResponse(
                 HttpStatus.NOT_FOUND,
                 statusDescription,
@@ -49,6 +49,7 @@ class GrpcExceptionHandler : ExceptionHandler<StatusRuntimeException, HttpRespon
                 )
             }
         }
+        return httpResponse
     }
 
     private fun obterListaDeErros(gStatus: com.google.rpc.Status): List<FieldError> {

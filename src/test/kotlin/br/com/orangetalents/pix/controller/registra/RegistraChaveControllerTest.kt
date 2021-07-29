@@ -65,11 +65,6 @@ internal class RegistraChaveControllerTest {
 
     @Test
     internal fun `deve retornar erro BAD_REQUEST quando enviar dados invalidos`() {
-        `when`(gRpcRegistra.registra(requestErrorGrpc("")))
-            .thenThrow(
-                io.grpc.Status.INVALID_ARGUMENT.withDescription("Dados inválidos").asRuntimeException()
-            )
-
         val request =
             HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePixErrorRequest(""))
         val httpThrow = assertThrows<HttpClientResponseException> {
@@ -91,11 +86,13 @@ internal class RegistraChaveControllerTest {
 
         val request = HttpRequest.POST("/api/v1/clientes/fb7da232-62cd-49a3-92cf-a88a7022f9c0/pix", novaChavePix())
         val httpThrow = assertThrows<HttpClientResponseException> {
-            client.toBlocking().exchange(request, Argument.of(Any::class.java), ERROR_CLASS)
+            client.toBlocking()
+                .exchange(request, Argument.of(Any::class.java), Argument.of(StatusWithDetails::class.java))
         }
 
         with(httpThrow.response) {
             assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, status)
+            assertEquals("Cliente não encontrado no Itaú", getBody(StatusWithDetails::class.java).get().statusDescription)
         }
     }
 
